@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Резервирование</string>
+    <string name="log_tag">RESERVE</string>
+
+    <string name="resource_status_free">Свободен</string>
+    <string name="resource_status_reserve">Зарезервирован</string>
+    <string name="resource_status_busy">Занят</string>
+    <string name="resource_status_sold">Продан</string>
+
+    <string name="status_title_free">Свободен</string>
+    <string name="status_title_reserve">Резерв</string>
+    <string name="status_title_busy">Занят</string>
+    <string name="status_title_sold">Продан</string>
+
+    <string-array name="colors">
+
+        <item>White</item>
+        <item>Black</item>
+        <item>Primary</item>
+
+    </string-array>
+</resources>

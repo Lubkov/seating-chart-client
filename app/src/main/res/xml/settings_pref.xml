@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:key="setting_title_font_category"
+        android:title="Настройки подключения">
+
+        <EditTextPreference
+            android:key="host"
+            android:summary="Доменное имя, или ip адрес сервера"
+            android:title="Сервер"
+            android:inputType="text">
+        </EditTextPreference>
+
+        <EditTextPreference
+            android:key="port"
+            android:summary="Порт подключения"
+            android:title="Порт"
+            android:inputType="number">
+        </EditTextPreference>
+
+        <EditTextPreference
+            android:key="domain"
+            android:summary="Доменное имя приложения на сервере"
+            android:title="Домен приложения">
+        </EditTextPreference>
+
+        <EditTextPreference
+            android:key="portUpdate"
+            android:summary="Порт авто. обновления"
+            android:title="Порт подключения к серверу автоматического обновления данных"
+            android:inputType="number">
+        </EditTextPreference>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
