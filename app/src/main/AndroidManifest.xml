@@ -30,7 +30,6 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -38,10 +37,6 @@
 
         <activity android:name="ua.stellar.seatingchart.MainActivity"
                   android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity android:name="ua.stellar.seatingchart.SettingsActivity"
                   android:screenOrientation="landscape"
