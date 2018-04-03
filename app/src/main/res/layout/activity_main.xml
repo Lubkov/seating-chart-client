@@ -6,26 +6,26 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/totals"
+        android:id="@+id/paTotals"
         android:layout_width="180dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="#77b7b4b4"
         android:layout_alignParentRight="true">
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:text="Итоги" />
+        <!--<TextView-->
+            <!--android:id="@+id/textView"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_margin="5dp"-->
+            <!--android:text="Итоги" />-->
     </LinearLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/totals" >
+        android:layout_toLeftOf="@+id/paTotals" >
 
         <android.support.v4.view.ViewPager
             android:id="@+id/mapContainer"

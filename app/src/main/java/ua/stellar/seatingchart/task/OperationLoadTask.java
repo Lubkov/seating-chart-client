@@ -13,11 +13,11 @@ public class OperationLoadTask extends AsyncTask<Void, Void, JsonResponse> {
     private final String LOG_TAG = "RESERVE";
 
     private Activity activity;
-    private Long layoutID;
+    private String layoutID;
     private NotifyEvent onLoadingComplete;
 
     public OperationLoadTask(final Activity activity,
-                             final Long layoutID) {
+                             final String layoutID) {
 
         this.activity = activity;
         this.layoutID = layoutID;

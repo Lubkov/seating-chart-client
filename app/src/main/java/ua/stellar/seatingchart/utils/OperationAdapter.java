@@ -34,7 +34,7 @@ public class OperationAdapter extends BaseAdapter implements Filterable {
         this.context = context;
         this.items = items;
         lInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.allItems = new ArrayList<Operation>();
+        this.allItems = new ArrayList<>();
         this.allItems.addAll(items);
     }
 
@@ -109,6 +109,11 @@ public class OperationAdapter extends BaseAdapter implements Filterable {
     }
 
     public void addItem(Operation item) {
+
+        if (allItems.indexOf(item) >= 0) {
+            return;
+        }
+
         allItems.add(item);
 
         //есть удобвлетворяет фильтра

@@ -13,11 +13,13 @@ import android.widget.Toast;
 
 import java.util.List;
 
-import ua.stellar.seatingchart.domain.Layout;
+import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.domain.TheUser;
+import ua.stellar.seatingchart.event.NotifyEvent;
 import ua.stellar.seatingchart.event.OnLoginListener;
-import ua.stellar.seatingchart.task.LoadLayoutsTask;
+import ua.stellar.seatingchart.event.OnOperationLoad;
+import ua.stellar.seatingchart.service.MapService;
 import ua.stellar.seatingchart.utils.MapPageAdapter;
 import ua.stellar.ua.test.seatingchart.R;
 
@@ -27,13 +29,17 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
 
     //UI links
     private RelativeLayout container;
-    //private MapFragment mapFragment = null;
     private ViewPager mapContainer;
 
-    //data
-    private List<Layout> layouts = null;
+    private TotalsFragment totals;
 
-    private MapPageAdapter mapPageAdapter = null;
+    private MapService mapService;
+
+    public MainActivity() {
+        super();
+
+        mapService = new MapService(this);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,13 +47,13 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
         setContentView(R.layout.activity_main);
 
         Log.d(LOG_TAG, "Main activity: OnCreate");
-        if (layouts != null) {
+        if (mapService.getLayouts() != null) {
             Log.d(LOG_TAG, "Есть информация о карте");
         }
 
         container = (RelativeLayout) findViewById(android.R.id.tabhost);
         mapContainer = (ViewPager) findViewById(R.id.mapContainer);
-        mapPageAdapter = new MapPageAdapter(getSupportFragmentManager());
+        mapService.setMapPageAdapter(new MapPageAdapter(getSupportFragmentManager()));
 
         if (SysInfo.getInstance().isEmpty()) {
             showSettings();
@@ -66,28 +72,7 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
                 onLogin(SysInfo.getInstance().getUser());
             }
         }
-
-//        //инициализация подключения к серверу обновления данных
-//        initTCPClient();
     }
-
-//    private void initTCPClient() {
-//        TCPClient client = new TCPClient(SysInfo.getInstance().getHost(),
-//                                         SysInfo.getInstance().getPortUpdate());
-//        OnDataUpdateListener onDataUpdate =  new OnDataUpdateListener() {
-//            @Override
-//            public void onDataUpdate(String tag) {
-//
-//                //загрузить обновление данных
-//                mapFragment.loadUpdateData();
-//            }
-//        };
-//        client.setOnDataUpdateListener(onDataUpdate);
-//
-//        Thread thread = new Thread(client);
-//        thread.setDaemon(true);
-//        thread.start();
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -110,35 +95,42 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
     }
 
     private void initMap() {
-        if ((layouts == null) || (layouts.size() == 0)) {
+        if ((mapService.getCount() == 0) || (container == null)) {
             return;
         }
 
-        if (container == null) {
-            return;
-        }
+        mapService.createMapFragments();
+        mapContainer.setAdapter(mapService.getMapPageAdapter());
 
-        for (Layout layout: layouts) {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("layout", layout);
+        totals = new TotalsFragment();
+        totals.mapService = mapService;
+        FragmentTransaction fragmentTrans = getSupportFragmentManager().beginTransaction();
+        fragmentTrans.replace(R.id.paTotals, totals).commit();
 
-            MapFragment mapFragment = new MapFragment();
-            mapFragment.setArguments(bundle);
-            mapPageAdapter.addFragment(mapFragment, layout.getName());
-        }
-        mapContainer.setAdapter(mapPageAdapter);
+        mapService.setOnUpdateTotals(new NotifyEvent() {
+            @Override
+            public void onAction(Object sender) {
+                loadTotals();
+            }
+        });
 
-//        Layout layout = layouts.get(0);
-//        Bundle bundle = new Bundle();
-//        bundle.putParcelable("layout", layout);
-//
-//        mapFragment = new MapFragment();
-//        mapFragment.setArguments(bundle);
-//        FragmentTransaction fragmentTrans = getSupportFragmentManager().beginTransaction();
-//        fragmentTrans.replace(container.getId(), mapFragment).commit();
+        mapService.setAfterChangeEvent(new OnOperationLoad() {
+            @Override
+            public void onLoad(List<Operation> operations) {
+                totals.addOperations(operations);
+            }
 
-//        mapPageAdapter.addFragment(mapFragment, layout.getName());
-//        mapContainer.setAdapter(mapPageAdapter);
+            @Override
+            public void onError(String error) {
+
+            }
+        });
+
+        //загрузка итогов
+        loadTotals();
+
+        //создание слушателя на событие - "Автоматическое обноление данных"
+        mapService.addTCPClientListener();
 
         mapContainer.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
@@ -166,15 +158,12 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
     @Override
     public void onLogin(TheUser user) {
         SysInfo.getInstance().setUser(user);
+        mapService.loadLayoutList();
+        initMap();
+    }
 
-        LoadLayoutsTask task = new LoadLayoutsTask(this);
-
-        try {
-            layouts = task.execute().get();
-            initMap();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private void loadTotals() {
+        totals.updateTotals(mapService.getLayouts());
     }
 
 }

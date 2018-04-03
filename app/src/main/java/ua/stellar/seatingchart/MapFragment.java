@@ -12,47 +12,31 @@ import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.SearchView;
-import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.stellar.seatingchart.domain.Layout;
 import ua.stellar.seatingchart.domain.LayoutComposition;
-import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.event.NotifyEvent;
-import ua.stellar.seatingchart.event.OnDataUpdateListener;
 import ua.stellar.seatingchart.event.OnResourceChangeListener;
 import ua.stellar.seatingchart.event.OnResourceClickListener;
 import ua.stellar.seatingchart.event.OnResourceLongClickListener;
-import ua.stellar.seatingchart.task.BackgroundUpdateTask;
+import ua.stellar.seatingchart.service.MapService;
 import ua.stellar.seatingchart.task.LoadLayoutCompositionTask;
 import ua.stellar.seatingchart.task.LoadPictureTask;
-import ua.stellar.seatingchart.task.OperationLoadTask;
-import ua.stellar.seatingchart.tcp.TCPClient;
-import ua.stellar.seatingchart.utils.JsonResponse;
-import ua.stellar.seatingchart.utils.OperationAdapter;
 import ua.stellar.ua.test.seatingchart.R;
 
-public class MapFragment extends Fragment implements View.OnClickListener {
+public class MapFragment extends Fragment {
 
     private final String LOG_TAG = "RESERVE";
 
@@ -62,8 +46,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     //данные ресурсов на карте
     private List<LayoutComposition> items = null;
     private List<ResourceItem> resourceItems = null;
-
-    private Long lastUpdateID = 0L;
 
     //UI links
     private Activity activity = null;
@@ -84,14 +66,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     private ImageView mapBackground = null;
 
     private ProgressBar loadProgressBar;
-    private ProgressBar pbOperationLoad;
-    private TextView labelStatus;
     private ResourceEditDialog editDialog = null;
-    private SearchView swOperation = null;
-    private ListView lwOperation = null;
-    private OperationAdapter adapter = null;
 
-//    private TotalsFragment totals;
+    private NotifyEvent<ResourceItem> resourceLongClick;
+
+    public MapService mapService;
 
     public MapFragment() {
     }
@@ -108,12 +87,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         activity = this.getActivity();
         this.container = (RelativeLayout) view.findViewById(R.id.mainContainer);
         loadProgressBar = (ProgressBar) view.findViewById(R.id.loadProgressBar);
-        pbOperationLoad = (ProgressBar) view.findViewById(R.id.pbOperationLoad);
-        labelStatus = (TextView) view.findViewById(R.id.twLayoutSize);
-
-        Button buUpdate = (Button) view.findViewById(R.id.buUpdate);
-        buUpdate.setOnClickListener(this);
-
         mapBackground = new ImageView(this.getContext());
 
         Bundle bundle = getArguments();
@@ -147,46 +120,28 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             }
         });
 
-        // TODO: убраны итоги
-//        totals = new TotalsFragment();
-//        FragmentTransaction fragmentTrans = this.getActivity().getSupportFragmentManager().beginTransaction();
-//        fragmentTrans.replace(R.id.paTotals, totals).commit();
-
-
-
-//        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-//        int height = displaymetrics.heightPixels;
-//        int width = displaymetrics.widthPixels;
-//
-//        ImageView image = (ImageView) view.findViewById(R.id.imageView1);
-//        //TextView tv = (TextView)findViewById(txtViewsid);
-//        Matrix mat = new Matrix();
-//        Bitmap bMap = BitmapFactory.decodeResource(getResources(), R.drawable.couch);
-//        mat.postRotate(90); //===>angle to be rotated
-//        Bitmap bMapRotate = Bitmap.createBitmap(bMap, 0, 0, bMap.getWidth(), bMap.getHeight(), mat, true);
-//        image.setImageBitmap(bMapRotate);
-
-        //TextView text = (TextView) view.findViewById(R.id.myImageViewText);
-        //text.setText("rotated text here");
-
-        //RotateAnimation rotate = (RotateAnimation) AnimationUtils.loadAnimation(this.getContext(), R.anim.rotate90);
-        //text.setAnimation(rotate);
-
-        //создание слушателя на событие - "Автоматическое обноление данных"
-        addTCPClientListener();
-
         return view;
     }
 
+    public void setResourceLongClick(NotifyEvent<ResourceItem> resourceLongClick) {
+        this.resourceLongClick = resourceLongClick;
+    }
+
+    private void doResourceLongClick(final ResourceItem resourceItem) {
+        if (resourceLongClick != null) {
+            resourceLongClick.onAction(resourceItem);
+        }
+    }
+
     private void showLayoutSize() {
-        labelStatus.setText(mapWidth + "x" + mapHeight);
+//        labelStatus.setText(mapWidth + "x" + mapHeight);
     }
 
     private void loadMapData() {
         Log.d(LOG_TAG, "Загрузка состава карты");
         //загрузка данных о ресурсах карты - запрос на сервер
         try {
-            String url = getLoadLayoutCompositionsUrl(layout.getId(), lastUpdateID);
+            String url = getLoadLayoutCompositionsUrl(layout.getId().toString(), 0L);
 
             LoadLayoutCompositionTask task = new LoadLayoutCompositionTask(this.getActivity(), url);
             task.setOnLoadingComplete(new NotifyEvent<List<LayoutComposition>>() {
@@ -199,78 +154,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        pbOperationLoad.setVisibility(View.VISIBLE);
-        OperationLoadTask task = new OperationLoadTask(this.getActivity(), layout.getId());
-        task.setOnLoadingComplete(new NotifyEvent<JsonResponse>() {
-            @Override
-            public void onAction(JsonResponse response) {
-
-                loadOperation(response);
-                pbOperationLoad.setVisibility(View.INVISIBLE);
-            }
-        });
-        task.execute();
-
-        //загрузка итогов
-        loadTotals();
-    }
-
-    private void loadOperation(JsonResponse response) {
-        List<Operation> list = null;
-
-        if (response.isSuccess()) {
-            try {
-                Gson gson = new Gson();
-                Type listType = new TypeToken<ArrayList<Operation>>(){}.getType();
-                String innerJson = gson.toJson(response.getResult());
-                list = gson.fromJson(innerJson, listType);
-                Log.d(LOG_TAG, "Загружено " + list.size() + " операций");
-            } catch(Exception e) {
-                Log.e(LOG_TAG, "Загрузка операций: " + e.getMessage());
-                return;
-            }
-        } else {
-            Log.e(LOG_TAG, "Загрузка операций, success = false");
-            return;
-        }
-
-        adapter = new OperationAdapter(this.getContext(), list);
-
-        // настраиваем список
-        lwOperation = (ListView) view.findViewById(R.id.lwOperation);
-        lwOperation.setAdapter(adapter);
-
-        lwOperation.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                swOperation.setQuery(adapter.getOperation(position).getGoodsNumber().toString(), false);
-                swOperation.setIconified(false);
-                swOperation.clearFocus();
-            }
-        });
-
-        swOperation = (SearchView) view.findViewById(R.id.swOperation);
-        lwOperation.setVisibility(View.VISIBLE);
-        swOperation.setVisibility(View.VISIBLE);
-
-        //swOperation.onaddTextChangedListener(new TextWatcher() {
-
-        swOperation.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                //lwOperation.setText(query);
-                swOperation.clearFocus();
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                adapter.filter(newText);
-
-                return true;
-            }
-        });
     }
 
     private void loadBackground() {
@@ -353,9 +236,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         mapBackground.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                swOperation.setQuery("", false);
-                swOperation.setIconified(false);
-                swOperation.clearFocus();
+                doResourceLongClick(null);
+//                swOperation.setQuery("", false);
+//                swOperation.setIconified(false);
+//                swOperation.clearFocus();
             }
         });
 
@@ -385,9 +269,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             ResourceItem resourceItem = new ResourceItem(activity, getContext(), container, item, i);
             resourceItems.add(resourceItem);
 
-            //обновить ID последней загруженной операции с сервера
-            checklastUpdateID(item.getLastOper().getId());
-
             resourceItem.setOnResourceClickListener(new OnResourceClickListener() {
                 public void onClick(ResourceItem item) {
                     Log.d(LOG_TAG, "Resource item click, event in fragment: " + item.getLayoutComposition().getGoodName());
@@ -404,10 +285,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             resourceItem.setOnResourceLongClick(new OnResourceLongClickListener() {
                 @Override
                 public void onLongClick(ResourceItem item) {
-
-                    swOperation.setQuery(item.getLayoutComposition().getGoodNumber().toString(), false);
-                    swOperation.setIconified(false);
-                    swOperation.clearFocus();
+                    doResourceLongClick(item);
+//                    swOperation.setQuery(item.getLayoutComposition().getGoodNumber().toString(), false);
+//                    swOperation.setIconified(false);
+//                    swOperation.clearFocus();
                 }
             });
 
@@ -441,7 +322,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         return res;
     }
 
-    private ResourceItem getResourceItem(LayoutComposition search) {
+    public ResourceItem getResourceItem(LayoutComposition search) {
+
+        if (!search.getLayoutID().equals(layout.getId())) {
+            return null;
+        }
 
         for (ResourceItem item : resourceItems) {
             if (item.getLayoutComposition().getId().equals(search.getId())) {
@@ -450,18 +335,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         }
 
         return null;
-    }
-
-    private void checklastUpdateID(Long operID) {
-        if (operID > lastUpdateID) {
-            lastUpdateID = operID;
-        }
-    }
-
-    private void loadTotals() {
-
-        //TODO: Итоги
-//        totals.loadTotals(layout.getId());
     }
 
     private ResourceEditDialog createResourceEditDialog() {
@@ -486,82 +359,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         return editDialog;
     }
 
-    @Override
-    public void onClick(View v) {
-        //Обновление состояния ресурсов карты
-        loadUpdateData();
-    }
-
-    public void loadUpdateData() {
-        String url = getLoadLayoutCompositionsUrl(layout.getId(), lastUpdateID);
-
-        //загрузить обновление данных
-        BackgroundUpdateTask task = new BackgroundUpdateTask(url, view);
-
-        task.setOnLoadingComplete(new NotifyEvent<List<LayoutComposition>>() {
-            public void onAction(List<LayoutComposition> items) {
-                if (items != null) {
-                    Log.d(LOG_TAG, "Необходимо обновить " + items.size() + " ресурсов");
-
-                    for (LayoutComposition item : items) {
-                        //поиск ресурса на карте
-                        ResourceItem resourceItem = getResourceItem(item);
-
-                        //нашли ресурс на карте
-                        if (resourceItem != null) {
-                            Log.d(LOG_TAG, "Old resource state: " + resourceItem.getLayoutComposition().getLastOper().getOperationType());
-                            Log.d(LOG_TAG, "New resource state: " + item.getLastOper().getOperationType());
-
-                            //заменяем последнюю операцию
-                            resourceItem.getLayoutComposition().setLastOper(item.getLastOper());
-
-                            //обновляем визуальное состояние
-                            resourceItem.update();
-
-                            if ((item.getLastOper().getId() != null) && (item.getLastOper().getId() > 0)) {
-                                //добавить операцию в список
-                                adapter.addItem(new Operation(item.getLastOper()));
-                                lwOperation.smoothScrollToPosition(adapter.getItems().size());
-                            }
-                        }
-
-                        //обновить ID последней загруженной операции с сервера
-                        checklastUpdateID(item.getLastOper().getId());
-                    }
-                } else {
-                    Log.d(LOG_TAG, "Данные актуальны");
-                }
-            }
-        });
-
-        task.execute();
-
-        //загрузка итогов
-        loadTotals();
-    }
-
-    private String getLoadLayoutCompositionsUrl(Long layoutID, Long lastOperID) {
+    private String getLoadLayoutCompositionsUrl(final String layoutID, final Long lastOperID) {
         return SysInfo.getInstance().getUrlAddress() +
                 "/order/get-layout-compositions?" +
                 "layout_id=" + layoutID + "&" +
                 "last_oper_id=" + lastOperID;
-    }
-
-    //создание слушателя на событие - "Автоматическое обноление данных"
-    private void addTCPClientListener() {
-        ReserveApplication application = (ReserveApplication) getActivity().getApplicationContext();
-        TCPClient client = application.getTcpClient();
-
-        if (client != null) {
-            OnDataUpdateListener onDataUpdate = new OnDataUpdateListener() {
-                @Override
-                public void onDataUpdate(String tag) {
-
-                    //загрузить обновление данных
-                    loadUpdateData();
-                }
-            };
-            client.setOnDataUpdateListener(onDataUpdate);
-        }
     }
 }

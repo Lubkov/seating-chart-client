@@ -1,44 +1,119 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     tools:context="ua.stellar.seatingchart.TotalsFragment">
 
-    <ListView
+    <!--Итоги по видам ресурсов-->
+    <LinearLayout
+        android:id="@+id/paTotals"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/lwTotal"
-        android:layout_marginBottom="2dp" />
+        android:orientation="vertical"
+        android:layout_alignParentTop="true">
 
+        <ListView
+            android:id="@+id/lwTotal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp" />
+
+        <LinearLayout
+            android:id="@+id/paTotal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/twAllTitleCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_column="1"
+                android:text="Всего"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="#000000" />
+
+            <TextView
+                android:id="@+id/twAllCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_column="2"
+                android:layout_marginLeft="5dp"
+                android:text="999"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="#000000"
+                android:textIsSelectable="false"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--Операции-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_below="@id/paTotals"
+        android:layout_above ="@id/buttonsLayout">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="false"
+            android:layout_alignParentStart="false">
+
+            <SearchView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/swOperation"
+                android:layout_alignTop="@+id/loadProgressBar"
+                android:layout_toStartOf="@+id/loadProgressBar"
+                android:visibility="invisible"
+                android:inputType="number" />
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/lwOperation"
+                android:transcriptMode="alwaysScroll"
+                android:visibility="invisible" />
+
+        </LinearLayout>
+
+        <ProgressBar
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:id="@+id/pbOperationLoad"
+            android:layout_gravity="center"
+            android:layout_centerInParent="true" />
+
+    </RelativeLayout>
+
+    <!--Нижняя панель управления-->
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/paTotal">
+        android:id="@+id/buttonsLayout"
+        android:layout_alignParentBottom="true">
 
-        <TextView
+        <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Всего"
-            android:id="@+id/twAllTitleCount"
-            android:layout_column="1"
-            android:textColor="#000000" />
+            android:id="@+id/pbBackgroundUpdate"
+            android:layout_gravity="left"
+            android:visibility="invisible" />
 
-        <TextView
+        <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="876"
-            android:id="@+id/twAllCount"
-            android:layout_column="2"
-            android:layout_marginLeft="5dp"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:textIsSelectable="false" />
+            android:text="Обновить"
+            android:id="@+id/buUpdate"
+            android:layout_marginBottom="12dp"
+            android:layout_gravity="right|top" />
     </LinearLayout>
 
-
-</LinearLayout>
+</RelativeLayout>
