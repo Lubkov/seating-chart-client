@@ -135,6 +135,10 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
         startActivity(settingsActivity);
     }
 
+    public TotalsFragment getTotals() {
+        return totals;
+    }
+
     @Override
     public void onLogin(TheUser user) {
         SysInfo.getInstance().setUser(user);
@@ -148,6 +152,10 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
 
     public void loadTotals() {
         totals.updateTotals(mapService.getLayouts());
+    }
+
+    public void initOperationList(final List<Operation> operations) {
+        totals.initOperationList(operations);
     }
 
     public void addOperations(final List<Operation> operations) {

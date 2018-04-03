@@ -1,6 +1,7 @@
 package ua.stellar.seatingchart;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -29,8 +30,6 @@ import ua.stellar.seatingchart.domain.LayoutComposition;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.event.NotifyEvent;
 import ua.stellar.seatingchart.event.OnResourceChangeListener;
-import ua.stellar.seatingchart.event.OnResourceClickListener;
-import ua.stellar.seatingchart.event.OnResourceLongClickListener;
 import ua.stellar.seatingchart.service.MapService;
 import ua.stellar.seatingchart.task.LoadLayoutCompositionTask;
 import ua.stellar.seatingchart.task.LoadPictureTask;
@@ -68,7 +67,9 @@ public class MapFragment extends Fragment {
     private ProgressBar loadProgressBar;
     private ResourceEditDialog editDialog = null;
 
-    private NotifyEvent<ResourceItem> resourceLongClick;
+    //events
+    private OnClickListener onClickListener;
+    private ResourceItem.OnLongClickListener onResourceLongClick;
 
     public MapService mapService;
 
@@ -121,16 +122,6 @@ public class MapFragment extends Fragment {
         });
 
         return view;
-    }
-
-    public void setResourceLongClick(NotifyEvent<ResourceItem> resourceLongClick) {
-        this.resourceLongClick = resourceLongClick;
-    }
-
-    private void doResourceLongClick(final ResourceItem resourceItem) {
-        if (resourceLongClick != null) {
-            resourceLongClick.onAction(resourceItem);
-        }
     }
 
     private void showLayoutSize() {
@@ -233,14 +224,8 @@ public class MapFragment extends Fragment {
             Log.e(LOG_TAG, "Create background error: " + e.getMessage());
         }
 
-        mapBackground.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                doResourceLongClick(null);
-//                swOperation.setQuery("", false);
-//                swOperation.setIconified(false);
-//                swOperation.clearFocus();
-            }
+        mapBackground.setOnClickListener((View v) -> {
+            doOnClickListener();
         });
 
         showLayoutSize();
@@ -249,9 +234,7 @@ public class MapFragment extends Fragment {
     private int getDrawable(String name) throws Resources.NotFoundException {
         Resources resources = this.getContext().getResources();
 
-        int res = resources.getIdentifier(name,
-                "drawable",
-                this.getContext().getPackageName());
+        int res = resources.getIdentifier(name, "drawable",  this.getContext().getPackageName());
         return res;
     }
 
@@ -262,34 +245,26 @@ public class MapFragment extends Fragment {
             return;
         }
 
-        resourceItems = new ArrayList<ResourceItem>();
+        resourceItems = new ArrayList<>();
 
         for (int i = 0; i < items.size(); i++) {
             LayoutComposition item = items.get(i);
             ResourceItem resourceItem = new ResourceItem(activity, getContext(), container, item, i);
             resourceItems.add(resourceItem);
 
-            resourceItem.setOnResourceClickListener(new OnResourceClickListener() {
-                public void onClick(ResourceItem item) {
-                    Log.d(LOG_TAG, "Resource item click, event in fragment: " + item.getLayoutComposition().getGoodName());
+            resourceItem.setOnClickListener((ResourceItem resource) -> {
+                Log.d(LOG_TAG, "Resource item click, event in fragment: " + resource.getLayoutComposition().getGoodName());
 
-                    if ((editDialog == null) || (!editDialog.isAdded())) {
-                        ResourceEditDialog dialog = createResourceEditDialog();
+                if ((editDialog == null) || (!editDialog.isAdded())) {
+                    ResourceEditDialog dialog = createResourceEditDialog();
 
-                        dialog.setResourceItem(item);
-                        dialog.show(getActivity().getFragmentManager(), "ResourceEditDialog");
-                    }
+                    dialog.setResourceItem(resource);
+                    dialog.show(getActivity().getFragmentManager(), "ResourceEditDialog");
                 }
             });
 
-            resourceItem.setOnResourceLongClick(new OnResourceLongClickListener() {
-                @Override
-                public void onLongClick(ResourceItem item) {
-                    doResourceLongClick(item);
-//                    swOperation.setQuery(item.getLayoutComposition().getGoodNumber().toString(), false);
-//                    swOperation.setIconified(false);
-//                    swOperation.clearFocus();
-                }
+            resourceItem.setOnLongClickListener((ResourceItem resource) -> {
+                doResourceLongClick(resource);
             });
 
 //            resourceItem.setOnStatusChanged(new OnResourceStatusChangedListener() {
@@ -298,8 +273,6 @@ public class MapFragment extends Fragment {
 //                }
 //            });
         }
-
-//        showTotals();
     }
 
     private int getBackResourceIndex(final int index) {
@@ -340,20 +313,16 @@ public class MapFragment extends Fragment {
     private ResourceEditDialog createResourceEditDialog() {
         editDialog = new ResourceEditDialog();
 
-        editDialog.setOnBackResource(new OnResourceChangeListener() {
-            public void onChange(ResourceItem item) {
-                int index = getBackResourceIndex(item.getIndex());
-                ResourceItem backItem = resourceItems.get(index);
-                editDialog.updateView(backItem);
-            }
+        editDialog.setOnBackResource((ResourceItem item) -> {
+            int index = getBackResourceIndex(item.getIndex());
+            ResourceItem backItem = resourceItems.get(index);
+            editDialog.updateView(backItem);
         });
 
-        editDialog.setOnForwardResource(new OnResourceChangeListener() {
-            public void onChange(ResourceItem item) {
-                int index = getForwardResourceIndex(item.getIndex());
-                ResourceItem nextItem = resourceItems.get(index);
-                editDialog.updateView(nextItem);
-            }
+        editDialog.setOnForwardResource((ResourceItem item) -> {
+            int index = getForwardResourceIndex(item.getIndex());
+            ResourceItem nextItem = resourceItems.get(index);
+            editDialog.updateView(nextItem);
         });
 
         return editDialog;
@@ -365,4 +334,32 @@ public class MapFragment extends Fragment {
                 "layout_id=" + layoutID + "&" +
                 "last_oper_id=" + lastOperID;
     }
+
+    public void setOnResourceLongClickListener(ResourceItem.OnLongClickListener listener) {
+        this.onResourceLongClick = listener;
+    }
+
+    private void doResourceLongClick(final ResourceItem item) {
+        if (onResourceLongClick != null) {
+            onResourceLongClick.onLongClick(item);
+        }
+    }
+
+    public void setOnClickListener(final OnClickListener listener) {
+        this.onClickListener = listener;
+    }
+
+    private void doOnClickListener() {
+        if (onClickListener != null) {
+            onClickListener.onClick(this);
+        }
+    }
+
+
+    public interface OnClickListener {
+
+        void onClick(final MapFragment mapFragment);
+    }
+
+
 }

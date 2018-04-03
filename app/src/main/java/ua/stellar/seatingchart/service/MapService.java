@@ -21,7 +21,6 @@ import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.event.NotifyEvent;
 import ua.stellar.seatingchart.event.OnDataUpdateListener;
-import ua.stellar.seatingchart.event.OnOperationLoad;
 import ua.stellar.seatingchart.task.BackgroundUpdateTask;
 import ua.stellar.seatingchart.task.LoadLayoutsTask;
 import ua.stellar.seatingchart.task.OperationLoadTask;
@@ -73,10 +72,17 @@ public class MapService {
             MapFragment mapFragment = new MapFragment();
             mapFragment.setArguments(bundle);
             mapPageAdapter.addFragment(mapFragment, layout.getName());
+
+            mapFragment.setOnResourceLongClickListener((ResourceItem item) -> {
+                activity.getTotals().setSearchText(item.getLayoutComposition().getGoodNumber().toString());
+            });
+            mapFragment.setOnClickListener((MapFragment fragment) -> {
+                activity.getTotals().setSearchText("");
+            });
         }
     }
 
-    public void loadAllOperation(OnOperationLoad loadEvent) {
+    public void loadAllOperation() {
 
         OperationLoadTask task = new OperationLoadTask(activity, getLayoutIdList());
         task.setOnLoadingComplete(new NotifyEvent<JsonResponse>() {
@@ -90,12 +96,12 @@ public class MapService {
                         String innerJson = gson.toJson(response.getResult());
                         list = gson.fromJson(innerJson, listType);
                         Log.d(LOG_TAG, "Загружено " + list.size() + " операций");
-                        loadEvent.onLoad(list);
+                        activity.initOperationList(list);
                     } catch(Exception e) {
-                        loadEvent.onError("Загрузка операций: " + e.getMessage());
+                        activity.showError("Загрузка операций: " + e.getMessage());
                     }
                 } else {
-                    loadEvent.onError("Загрузка операций, success = false");
+                    activity.showError("Загрузка операций, success = false");
                 }
             }
         });

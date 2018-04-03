@@ -23,8 +23,6 @@ import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.OperationType;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.event.NotifyEvent;
-import ua.stellar.seatingchart.event.OnResourceClickListener;
-import ua.stellar.seatingchart.event.OnResourceLongClickListener;
 import ua.stellar.seatingchart.event.OnResourceStatusChangedListener;
 import ua.stellar.seatingchart.task.SaveResourceTask;
 import ua.stellar.ua.test.seatingchart.R;
@@ -64,8 +62,8 @@ public class ResourceItem {
     //events
     private View.OnClickListener onClickEvent = null;
     private View.OnLongClickListener onLongClickEvent = null;
-    private OnResourceClickListener onResourceClick = null;
-    private OnResourceLongClickListener onResourceLongClick = null;
+    private OnClickListener onClick = null;
+    private OnLongClickListener onLongClick = null;
     private OnResourceStatusChangedListener onStatusChanged = null;
 
     public ResourceItem(final Activity activity,
@@ -104,7 +102,7 @@ public class ResourceItem {
             public boolean onLongClick(View v) {
                 Log.d(LOG_TAG, "On long click resource");
 
-                doResourceLongClick();
+                doLongClick();
                 return true;
             }
         };
@@ -284,27 +282,27 @@ public class ResourceItem {
         }
     }
 
-    public void setOnResourceClickListener(OnResourceClickListener listener) {
-        onResourceClick = listener;
+    public void setOnClickListener(OnClickListener listener) {
+        onClick = listener;
     }
 
     public void setOnStatusChanged(OnResourceStatusChangedListener onStatusChanged) {
         this.onStatusChanged = onStatusChanged;
     }
 
-    public void setOnResourceLongClick(OnResourceLongClickListener listener) {
-        this.onResourceLongClick = listener;
+    public void setOnLongClickListener(OnLongClickListener listener) {
+        this.onLongClick = listener;
     }
 
     public void doResourceClick() {
-        if (onResourceClick != null) {
-            onResourceClick.onClick(this);
+        if (onClick != null) {
+            onClick.onClick(this);
         }
     }
 
-    public void doResourceLongClick() {
-        if (onResourceLongClick != null) {
-            onResourceLongClick.onLongClick(this);
+    public void doLongClick() {
+        if (onLongClick != null) {
+            onLongClick.onLongClick(this);
         }
     }
 
@@ -320,5 +318,15 @@ public class ResourceItem {
 
     public int getIndex() {
         return index;
+    }
+
+
+    public interface OnClickListener {
+        void onClick(ResourceItem item);
+    }
+
+    public interface OnLongClickListener {
+
+        void onLongClick(ResourceItem item);
     }
 }

@@ -25,12 +25,8 @@ import ua.stellar.seatingchart.domain.Layout;
 import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.domain.Total;
-import ua.stellar.seatingchart.event.NotifyEvent;
-import ua.stellar.seatingchart.event.OnOperationLoad;
-import ua.stellar.seatingchart.event.OnTaskCompleteListener;
 import ua.stellar.seatingchart.service.MapService;
 import ua.stellar.seatingchart.task.LoadDataTask;
-import ua.stellar.seatingchart.task.OperationLoadTask;
 import ua.stellar.seatingchart.utils.JsonResponse;
 import ua.stellar.seatingchart.utils.OperationAdapter;
 import ua.stellar.seatingchart.utils.TotalAdapter;
@@ -71,6 +67,7 @@ public class TotalsFragment extends Fragment {
         totalList = (ListView) view.findViewById(R.id.lwTotal);
         twAllCount = (TextView) view.findViewById(R.id.twAllCount);
         pbOperationLoad = (ProgressBar) view.findViewById(R.id.pbOperationLoad);
+        pbOperationLoad.setVisibility(View.VISIBLE);
 
         Button buUpdate = (Button) view.findViewById(R.id.buUpdate);
         buUpdate.setOnClickListener((View v) -> {
@@ -79,7 +76,7 @@ public class TotalsFragment extends Fragment {
         });
 
         //создать вью и загрузить все операции
-        createOperationList();
+        mapService.loadAllOperation();
 
         return view;
     }
@@ -103,35 +100,13 @@ public class TotalsFragment extends Fragment {
         swOperation.clearFocus();
     }
 
-    private void createOperationList() {
-
-        pbOperationLoad.setVisibility(View.VISIBLE);
-
-        mapService.loadAllOperation(new OnOperationLoad() {
-
-            @Override
-            public void onLoad(List<Operation> operations) {
-                initOperationList(operations);
-                pbOperationLoad.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e(LOG_TAG, "Load operations: " + error);
-            }
-        });
-    }
-
     private void loadTotals() {
         //загрузка итогов
         String url = SysInfo.getInstance().getUrlAddress() + "/order/get-totals?layout_id=" + mapService.getLayoutIdList();
         LoadDataTask totalLoadTask = new LoadDataTask(this.getActivity(), false, url);
-        totalLoadTask.setOnTaskComplete(new OnTaskCompleteListener() {
-            @Override
-            public void onTaskComplete(JsonResponse response) {
-                Log.d(LOG_TAG, "Загружены итоги: " + response.isSuccess());
-                showTotals(response);
-            }
+        totalLoadTask.setOnTaskComplete((JsonResponse response) -> {
+            Log.d(LOG_TAG, "Загружены итоги: " + response.isSuccess());
+            showTotals(response);
         });
         totalLoadTask.execute();
     }
@@ -171,7 +146,7 @@ public class TotalsFragment extends Fragment {
         twAllCount.setText("" + all);
     }
 
-    private void initOperationList(List<Operation> operations) {
+    public void initOperationList(List<Operation> operations) {
         //обновить ID последней загруженной операции с сервера
         for (Operation operation : operations) {
             mapService.setLastOperation(operation);
@@ -183,18 +158,17 @@ public class TotalsFragment extends Fragment {
         lwOperation = (ListView) view.findViewById(R.id.lwOperation);
         lwOperation.setAdapter(adapter);
 
-        lwOperation.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                swOperation.setQuery(adapter.getOperation(position).getGoodsNumber().toString(), false);
-                swOperation.setIconified(false);
-                swOperation.clearFocus();
-            }
+        lwOperation.setOnItemClickListener((AdapterView<?> parent, View view, int position, long id) -> {
+            swOperation.setQuery(adapter.getOperation(position).getGoodsNumber().toString(), false);
+            swOperation.setIconified(false);
+            swOperation.clearFocus();
         });
 
         swOperation = (SearchView) view.findViewById(R.id.swOperation);
         lwOperation.setVisibility(View.VISIBLE);
         swOperation.setVisibility(View.VISIBLE);
+
+        pbOperationLoad.setVisibility(View.INVISIBLE);
 
         //swOperation.onaddTextChangedListener(new TextWatcher() {
 

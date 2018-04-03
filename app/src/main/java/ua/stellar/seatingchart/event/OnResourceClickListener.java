@@ -4,5 +4,5 @@ import ua.stellar.seatingchart.ResourceItem;
 
 public interface OnResourceClickListener {
 
-    public void onClick(ResourceItem item);
+    void onResourceClick(ResourceItem item);
 }
