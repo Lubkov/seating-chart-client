@@ -53,7 +53,6 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
 
         container = (RelativeLayout) findViewById(android.R.id.tabhost);
         mapContainer = (ViewPager) findViewById(R.id.mapContainer);
-        mapService.setMapPageAdapter(new MapPageAdapter(getSupportFragmentManager()));
 
         if (SysInfo.getInstance().isEmpty()) {
             showSettings();
@@ -98,33 +97,14 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
         if ((mapService.getCount() == 0) || (container == null)) {
             return;
         }
-
-        mapService.createMapFragments();
+        //создание адаптера для фрагментов карты, создание фрагментов карты
+        mapService.init();
         mapContainer.setAdapter(mapService.getMapPageAdapter());
 
         totals = new TotalsFragment();
         totals.mapService = mapService;
         FragmentTransaction fragmentTrans = getSupportFragmentManager().beginTransaction();
         fragmentTrans.replace(R.id.paTotals, totals).commit();
-
-        mapService.setOnUpdateTotals(new NotifyEvent() {
-            @Override
-            public void onAction(Object sender) {
-                loadTotals();
-            }
-        });
-
-        mapService.setAfterChangeEvent(new OnOperationLoad() {
-            @Override
-            public void onLoad(List<Operation> operations) {
-                totals.addOperations(operations);
-            }
-
-            @Override
-            public void onError(String error) {
-
-            }
-        });
 
         //загрузка итогов
         loadTotals();
@@ -162,8 +142,15 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
         initMap();
     }
 
-    private void loadTotals() {
+    public void showError(final String error) {
+        Log.e(LOG_TAG, error);
+    }
+
+    public void loadTotals() {
         totals.updateTotals(mapService.getLayouts());
     }
 
+    public void addOperations(final List<Operation> operations) {
+        totals.addOperations(operations);
+    }
 }

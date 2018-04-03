@@ -11,6 +11,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.stellar.seatingchart.MainActivity;
 import ua.stellar.seatingchart.MapFragment;
 import ua.stellar.seatingchart.ReserveApplication;
 import ua.stellar.seatingchart.ResourceItem;
@@ -30,23 +31,27 @@ import ua.stellar.seatingchart.utils.MapPageAdapter;
 
 public class MapService {
 
+//    private static final MapService instance = new MapService();
+
     private final String LOG_TAG = "RESERVE";
 
     //map list
     private List<Layout> layouts;
 
-    private Activity activity;
+    private MainActivity activity;
 
     private MapPageAdapter mapPageAdapter;
 
     private Long lastUpdateID = 0L;
 
-    private NotifyEvent onUpdateTotals;
-
-    private OnOperationLoad afterChangeEvent;
-
-    public MapService(Activity activity) {
+    public MapService(final MainActivity activity) {
         this.activity = activity;
+    }
+
+    //мнмцмализация сервиса
+    public void init() {
+        mapPageAdapter = new MapPageAdapter(activity.getSupportFragmentManager());
+        createMapFragments();
     }
 
     public void loadLayoutList() {
@@ -60,7 +65,7 @@ public class MapService {
         }
     }
 
-    public void createMapFragments() {
+    private void createMapFragments() {
         for (Layout layout: layouts) {
             Bundle bundle = new Bundle();
             bundle.putParcelable("layout", layout);
@@ -136,7 +141,7 @@ public class MapService {
                         setLastOperation(item.getLastOper());
                     }
 
-                    doAfterChange(operations);
+                    activity.addOperations(operations);
                 } else {
                     Log.d(LOG_TAG, "Данные актуальны");
                 }
@@ -145,7 +150,7 @@ public class MapService {
         task.execute();
 
         //обновление итогов
-        doUpdateTotals();
+        activity.loadTotals();
     }
 
     public List<Layout> getLayouts() {
@@ -161,30 +166,6 @@ public class MapService {
 
     public MapPageAdapter getMapPageAdapter() {
         return mapPageAdapter;
-    }
-
-    public void setMapPageAdapter(MapPageAdapter mapPageAdapter) {
-        this.mapPageAdapter = mapPageAdapter;
-    }
-
-    public void setOnUpdateTotals(NotifyEvent onUpdateTotals) {
-        this.onUpdateTotals = onUpdateTotals;
-    }
-
-    public void setAfterChangeEvent(final OnOperationLoad event) {
-        this.afterChangeEvent = event;
-    }
-
-    private void doUpdateTotals() {
-        if (onUpdateTotals != null) {
-            onUpdateTotals.onAction(this);
-        }
-    }
-
-    private void doAfterChange(final List<Operation> operations) {
-        if (afterChangeEvent != null) {
-            afterChangeEvent.onLoad(operations);
-        }
     }
 
     //создание слушателя на событие - "Автоматическое обноление данных"
