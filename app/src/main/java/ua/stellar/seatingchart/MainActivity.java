@@ -161,4 +161,12 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
     public void addOperations(final List<Operation> operations) {
         totals.addOperations(operations);
     }
+
+    public void showNextLayout() {
+        int n = mapContainer.getCurrentItem() + 1;
+        if (n >= mapService.getMapPageAdapter().getCount()) {
+            n = 0;
+        }
+        mapContainer.setCurrentItem(n);
+    }
 }

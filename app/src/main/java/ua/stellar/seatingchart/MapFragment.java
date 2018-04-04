@@ -52,6 +52,8 @@ public class MapFragment extends Fragment {
     //вью
     private View view;
 
+    private MapView mapView;
+
     //контейнер
     private RelativeLayout container = null;
 
@@ -61,14 +63,12 @@ public class MapFragment extends Fragment {
     //высота карты(контейнера)
     private int mapWidth;
 
-    //фоновое изображение карты
-    private ImageView mapBackground = null;
-
     private ProgressBar loadProgressBar;
     private ResourceEditDialog editDialog = null;
 
     //events
     private OnClickListener onClickListener;
+    private OnDoubleClickListener onDoubleClickListener;
     private ResourceItem.OnLongClickListener onResourceLongClick;
 
     public MapService mapService;
@@ -88,7 +88,10 @@ public class MapFragment extends Fragment {
         activity = this.getActivity();
         this.container = (RelativeLayout) view.findViewById(R.id.mainContainer);
         loadProgressBar = (ProgressBar) view.findViewById(R.id.loadProgressBar);
-        mapBackground = new ImageView(this.getContext());
+//        mapBackground = new ImageView(this.getContext());
+        mapView = (MapView) view.findViewById(R.id.map_view);
+        mapView.setOnClickListener((MapView map) -> doOnClickListener());
+        mapView.setOnDoubleClickListener((MapView map) -> doOnDoubleClickListener());
 
         Bundle bundle = getArguments();
         if (bundle != null) {
@@ -159,8 +162,9 @@ public class MapFragment extends Fragment {
             public void onAction(Bitmap sender) {
                 if (sender != null) {
                     //вставить изображение не маштабируя
-                    resizeBackground(sender);
+//                    resizeBackground(sender);
                 }
+                mapView.setBackground(sender);
 
                 //загрузить данные карты
                 loadMapData();
@@ -168,74 +172,6 @@ public class MapFragment extends Fragment {
             }
         });
         task.execute();
-    }
-
-    private void resizeBackground(Bitmap source) {
-        int originalWidth = layout.getBackground().getWidth();
-        int originalHeight = layout.getBackground().getHeight();
-
-        Log.d(LOG_TAG, "UpdateView. Background size, width: " + originalWidth + ", height = " + originalHeight);
-
-        if ((originalWidth <= 0) || (originalHeight <= 0)) {
-            Log.e(LOG_TAG, "Некорректные размеры карты. Ширина, или высота меньше, либо равно нулю");
-        }
-
-        int cropWidth = originalWidth;
-        int cropHeight = originalHeight;
-
-        if (originalWidth > mapWidth) {
-            cropWidth = mapWidth;
-        }
-
-        if (originalHeight > mapHeight) {
-            cropHeight = mapHeight;
-        }
-
-        Log.d(LOG_TAG, "Crop image size, width: " + cropWidth + ", height = " + cropHeight);
-
-        RelativeLayout.LayoutParams lParams = new RelativeLayout.LayoutParams(cropWidth, cropHeight);
-        lParams.setMargins(0, 0, 0, 0);
-        container.addView(mapBackground, 0, lParams);
-
-        try {
-            Paint paint = new Paint();
-            paint.setFilterBitmap(true);
-            Bitmap targetBitmap = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888);
-            RectF rectf = new RectF(0, 0, cropWidth, cropHeight);
-
-            Canvas canvas = new Canvas(targetBitmap);
-            Path path = new Path();
-
-            path.addRect(rectf, Path.Direction.CW);
-            canvas.clipPath(path);
-
-            canvas.drawBitmap(source, new Rect(0, 0, source.getWidth(), source.getHeight()),
-                    new Rect(0, 0, originalWidth, originalHeight), paint);
-
-            Matrix matrix = new Matrix();
-            matrix.postScale(1f, 1f);
-            Bitmap resizedBitmap = Bitmap.createBitmap(targetBitmap, 0, 0, cropWidth, cropHeight, matrix, true);
-
-            /*convert Bitmap to resource */
-            BitmapDrawable bd = new BitmapDrawable(resizedBitmap);
-
-            mapBackground.setBackgroundDrawable(bd);
-        } catch(Exception e) {
-            Log.e(LOG_TAG, "Create background error: " + e.getMessage());
-        }
-
-        mapBackground.setOnClickListener((View v) -> {
-            doOnClickListener();
-        });
-
-        showLayoutSize();
-    }
-
-    private int getDrawable(String name) throws Resources.NotFoundException {
-        Resources resources = this.getContext().getResources();
-
-        int res = resources.getIdentifier(name, "drawable",  this.getContext().getPackageName());
-        return res;
     }
 
     private void createItems(List<LayoutComposition> items) {
@@ -266,12 +202,6 @@ public class MapFragment extends Fragment {
             resourceItem.setOnLongClickListener((ResourceItem resource) -> {
                 doResourceLongClick(resource);
             });
-
-//            resourceItem.setOnStatusChanged(new OnResourceStatusChangedListener() {
-//                public void onStatusChanged(ResourceItem item) {
-//                    showTotals();
-//                }
-//            });
         }
     }
 
@@ -355,10 +285,25 @@ public class MapFragment extends Fragment {
         }
     }
 
+    public void setOnDoubleClickListener(final OnDoubleClickListener listener) {
+        this.onDoubleClickListener = listener;
+    }
+
+    private void doOnDoubleClickListener() {
+        if (onDoubleClickListener != null) {
+            onDoubleClickListener.onDoubleClick(this);
+        }
+    }
+
 
     public interface OnClickListener {
 
         void onClick(final MapFragment mapFragment);
+    }
+
+    public interface OnDoubleClickListener {
+
+        void onDoubleClick(final MapFragment mapFragment);
     }
 
 

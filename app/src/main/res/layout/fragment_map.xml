@@ -13,4 +13,10 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
+    <ua.stellar.seatingchart.MapView
+        android:id="@+id/map_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </ua.stellar.seatingchart.MapView>
+
 </RelativeLayout>

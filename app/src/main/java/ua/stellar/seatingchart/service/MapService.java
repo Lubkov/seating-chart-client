@@ -73,12 +73,10 @@ public class MapService {
             mapFragment.setArguments(bundle);
             mapPageAdapter.addFragment(mapFragment, layout.getName());
 
-            mapFragment.setOnResourceLongClickListener((ResourceItem item) -> {
-                activity.getTotals().setSearchText(item.getLayoutComposition().getGoodNumber().toString());
-            });
-            mapFragment.setOnClickListener((MapFragment fragment) -> {
-                activity.getTotals().setSearchText("");
-            });
+            mapFragment.setOnResourceLongClickListener((ResourceItem item) ->
+                    activity.getTotals().setSearchText(item.getLayoutComposition().getGoodNumber().toString()));
+            mapFragment.setOnClickListener((MapFragment fragment) -> activity.getTotals().setSearchText(""));
+            mapFragment.setOnDoubleClickListener((MapFragment fragment) -> activity.showNextLayout());
         }
     }
 
