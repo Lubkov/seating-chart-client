@@ -11,21 +11,39 @@ import android.view.MenuItem;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
+import ua.stellar.seatingchart.domain.Layout;
+import ua.stellar.seatingchart.domain.LayoutComposition;
 import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.domain.TheUser;
 import ua.stellar.seatingchart.event.NotifyEvent;
+import ua.stellar.seatingchart.event.OnDataUpdateListener;
 import ua.stellar.seatingchart.event.OnLoginListener;
-import ua.stellar.seatingchart.event.OnOperationLoad;
-import ua.stellar.seatingchart.service.MapService;
+import ua.stellar.seatingchart.task.BackgroundUpdateTask;
+import ua.stellar.seatingchart.task.LoadLayoutsTask;
+import ua.stellar.seatingchart.task.OperationLoadTask;
+import ua.stellar.seatingchart.tcp.TCPClient;
+import ua.stellar.seatingchart.utils.JsonResponse;
 import ua.stellar.seatingchart.utils.MapPageAdapter;
 import ua.stellar.ua.test.seatingchart.R;
 
-public class MainActivity extends FragmentActivity implements OnLoginListener {
+public class MainActivity extends FragmentActivity implements OnLoginListener, TotalsFragment.OnTotalsListener {
 
     private final String LOG_TAG = "RESERVE";
+
+    //map list
+    private List<Layout> layouts;
+
+    private MapPageAdapter mapPageAdapter;
+
+    private Long lastUpdateID = 0L;
 
     //UI links
     private RelativeLayout container;
@@ -33,26 +51,19 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
 
     private TotalsFragment totals;
 
-    private MapService mapService;
-
-    public MainActivity() {
-        super();
-
-        mapService = new MapService(this);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         Log.d(LOG_TAG, "Main activity: OnCreate");
-        if (mapService.getLayouts() != null) {
+        if (layouts != null) {
             Log.d(LOG_TAG, "Есть информация о карте");
         }
 
         container = (RelativeLayout) findViewById(android.R.id.tabhost);
         mapContainer = (ViewPager) findViewById(R.id.mapContainer);
+        mapContainer.setOffscreenPageLimit(10);
 
         if (SysInfo.getInstance().isEmpty()) {
             showSettings();
@@ -94,15 +105,15 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
     }
 
     private void initMap() {
-        if ((mapService.getCount() == 0) || (container == null)) {
+        if ((getCount() == 0) || (container == null)) {
             return;
         }
         //создание адаптера для фрагментов карты, создание фрагментов карты
-        mapService.init();
-        mapContainer.setAdapter(mapService.getMapPageAdapter());
+        mapPageAdapter = new MapPageAdapter(getSupportFragmentManager());
+        createMapFragments();
+        mapContainer.setAdapter(mapPageAdapter);
 
         totals = new TotalsFragment();
-        totals.mapService = mapService;
         FragmentTransaction fragmentTrans = getSupportFragmentManager().beginTransaction();
         fragmentTrans.replace(R.id.paTotals, totals).commit();
 
@@ -110,18 +121,17 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
         loadTotals();
 
         //создание слушателя на событие - "Автоматическое обноление данных"
-        mapService.addTCPClientListener();
+        addTCPClientListener();
 
-        mapContainer.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        mapContainer.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
             @Override
             public void onPageSelected(int position) {
-                Log.d("LOG_TAG", "onPageSelected, position = " + position);
             }
 
             @Override
-            public void onPageScrolled(int position, float positionOffset,
-                                       int positionOffsetPixels) {
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                mapPageAdapter.setPosition(position);
             }
 
             @Override
@@ -130,19 +140,43 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
         });
     }
 
+    private void loadLayoutList() {
+        LoadLayoutsTask task = new LoadLayoutsTask(this);
+
+        try {
+            layouts = task.execute().get();
+            SysInfo.getInstance().setLayoutIdList(layouts);
+        } catch (Exception e) {
+            //TODO: добавить показ ошибки с возможность закрыть приложение, либо повторить загрузку данных
+            e.printStackTrace();
+        }
+    }
+
+    private void createMapFragments() {
+        for (Layout layout: layouts) {
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("layout", layout);
+
+            MapFragment mapFragment = new MapFragment();
+            mapFragment.setArguments(bundle);
+            mapPageAdapter.addFragment(mapFragment, layout.getName());
+
+            mapFragment.setOnResourceLongClickListener((ResourceItem item) ->
+                    totals.setSearchText(item.getLayoutComposition().getGoodNumber().toString()));
+            mapFragment.setOnClickListener((MapFragment fragment) -> totals.setSearchText(""));
+            mapFragment.setOnDoubleClickListener((MapFragment fragment) -> showNextLayout());
+        }
+    }
+
     private void showSettings() {
         Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
         startActivity(settingsActivity);
     }
 
-    public TotalsFragment getTotals() {
-        return totals;
-    }
-
     @Override
     public void onLogin(TheUser user) {
         SysInfo.getInstance().setUser(user);
-        mapService.loadLayoutList();
+        loadLayoutList();
         initMap();
     }
 
@@ -150,23 +184,164 @@ public class MainActivity extends FragmentActivity implements OnLoginListener {
         Log.e(LOG_TAG, error);
     }
 
-    public void loadTotals() {
-        totals.updateTotals(mapService.getLayouts());
+    private void loadTotals() {
+        totals.updateTotals(layouts);
     }
 
-    public void initOperationList(final List<Operation> operations) {
+    private void initOperationList(final List<Operation> operations) {
         totals.initOperationList(operations);
     }
 
-    public void addOperations(final List<Operation> operations) {
+    private void addOperations(final List<Operation> operations) {
         totals.addOperations(operations);
     }
 
-    public void showNextLayout() {
+    private void showNextLayout() {
         int n = mapContainer.getCurrentItem() + 1;
-        if (n >= mapService.getMapPageAdapter().getCount()) {
+        if (n >= mapPageAdapter.getCount()) {
             n = 0;
         }
         mapContainer.setCurrentItem(n);
+    }
+
+    //создание слушателя на событие - "Автоматическое обноление данных"
+    private void addTCPClientListener() {
+        ReserveApplication application = (ReserveApplication) getApplicationContext();
+        TCPClient client = application.getTcpClient();
+
+        if (client != null) {
+            OnDataUpdateListener onDataUpdate = new OnDataUpdateListener() {
+                @Override
+                public void onDataUpdate(String tag) {
+
+                    //загрузить обновление данных
+                    loadChanges();
+                }
+            };
+            client.setOnDataUpdateListener(onDataUpdate);
+        }
+    }
+
+    @Override
+    public void onTotalsCreate(final TotalsFragment fragment) {
+        //изменилась активная карта
+        mapPageAdapter.setOnChangeListener((final int position, final String title) -> totals.showCurrentMap(title));
+
+        //показать название первой карты
+        if (layouts.size() > 0) {
+            totals.showCurrentMap(layouts.get(0).getName());
+        }
+
+        //создать вью и загрузить все операции
+        loadAllOperation();
+    }
+
+    private void loadAllOperation() {
+        OperationLoadTask task = new OperationLoadTask(this, SysInfo.getInstance().getLayoutIdList());
+        task.setOnLoadingComplete(new NotifyEvent<JsonResponse>() {
+            @Override
+            public void onAction(JsonResponse response) {
+                List<Operation> list = null;
+                if (response.isSuccess()) {
+                    try {
+                        Gson gson = new Gson();
+                        Type listType = new TypeToken<ArrayList<Operation>>(){}.getType();
+                        String innerJson = gson.toJson(response.getResult());
+                        list = gson.fromJson(innerJson, listType);
+                        Log.d(LOG_TAG, "Загружено " + list.size() + " операций");
+                        initOperationList(list);
+                    } catch(Exception e) {
+                        showError("Загрузка операций: " + e.getMessage());
+                    }
+                } else {
+                    showError("Загрузка операций, success = false");
+                }
+            }
+        });
+        task.execute();
+    }
+
+    @Override
+    public void loadChanges() {
+        Log.d(LOG_TAG, "Обновление данных");
+        String url = getLoadLayoutCompositionsUrl(SysInfo.getInstance().getLayoutIdList(), lastUpdateID); //layout.getId()
+
+        //загрузить обновление данных
+        BackgroundUpdateTask task = new BackgroundUpdateTask(url);
+
+        task.setOnLoadingComplete(new NotifyEvent<List<LayoutComposition>>() {
+            public void onAction(List<LayoutComposition> items) {
+                if (items != null) {
+                    Log.d(LOG_TAG, "Необходимо обновить " + items.size() + " ресурсов");
+
+                    List<Operation> operations = new ArrayList<>();
+                    for (LayoutComposition item : items) {
+                        //поиск ресурса на карте
+                        ResourceItem resourceItem = getResourceItem(item);
+
+                        //нашли ресурс на карте
+                        if (resourceItem != null) {
+                            Log.d(LOG_TAG, "Old resource state: " + resourceItem.getLayoutComposition().getLastOper().getOperationType());
+                            Log.d(LOG_TAG, "New resource state: " + item.getLastOper().getOperationType());
+
+                            //заменяем последнюю операцию
+                            resourceItem.getLayoutComposition().setLastOper(item.getLastOper());
+
+                            //обновляем визуальное состояние
+                            resourceItem.update();
+
+                            if ((item.getLastOper().getId() != null) && (item.getLastOper().getId() > 0)) {
+                                operations.add(new Operation(item.getLastOper()));
+                            }
+                        } else {
+                            Log.e(LOG_TAG, "Ресурс не найден на карте");
+                        }
+
+                        //обновить ID последней загруженной операции с сервера
+                        setLastOperation(item.getLastOper());
+                    }
+
+                    addOperations(operations);
+                } else {
+                    Log.d(LOG_TAG, "Данные актуальны");
+                }
+            }
+        });
+        task.execute();
+
+        //обновление итогов
+        loadTotals();
+    }
+
+    private String getLoadLayoutCompositionsUrl(final String layoutID, final Long lastOperID) {
+        return SysInfo.getInstance().getUrlAddress() +
+                "/order/get-layout-compositions?" +
+                "layout_id=" + layoutID + "&" +
+                "last_oper_id=" + lastOperID;
+    }
+
+    @Override
+    public void setLastOperation(final Operation operation) {
+        if (operation.getId() > lastUpdateID) {
+            lastUpdateID = operation.getId();
+        }
+    }
+
+    private ResourceItem getResourceItem(final LayoutComposition search) {
+        for (int i = 0; i < mapPageAdapter.getCount(); i++) {
+            MapFragment layout = (MapFragment) mapPageAdapter.getItem(i);
+            ResourceItem item = layout.getResourceItem(search);
+            if (item != null) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    private long getCount() {
+        if (layouts == null) {
+            return 0;
+        }
+        return layouts.size();
     }
 }

@@ -29,6 +29,7 @@
                 android:id="@+id/twAllTitleCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
                 android:layout_column="1"
                 android:text="Всего"
                 android:textAppearance="?android:attr/textAppearanceMedium"
@@ -55,6 +56,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:layout_marginRight="5dp"
+        android:id="@+id/operationLayout"
         android:layout_below="@id/paTotals"
         android:layout_above ="@id/buttonsLayout">
 
@@ -94,26 +96,44 @@
 
     <!--Нижняя панель управления-->
     <LinearLayout
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/buttonsLayout"
         android:layout_alignParentBottom="true">
 
-        <ProgressBar
-            android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/twMapTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/pbBackgroundUpdate"
-            android:layout_gravity="left"
-            android:visibility="invisible" />
+            android:layout_margin="5dp"
+            android:layout_column="1"
+            android:text=""
+            android:textAlignment="center" />
 
-        <Button
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Обновить"
-            android:id="@+id/buUpdate"
-            android:layout_marginBottom="12dp"
-            android:layout_gravity="right|top" />
+            android:id="@+id/mapTitleLayout">
+
+            <ProgressBar
+                android:id="@+id/pbBackgroundUpdate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:visibility="invisible" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Обновить"
+                android:id="@+id/buUpdate"
+                android:layout_marginBottom="12dp"
+                android:layout_gravity="right|top" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </RelativeLayout>

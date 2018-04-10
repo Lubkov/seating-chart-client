@@ -1,16 +1,7 @@
 package ua.stellar.seatingchart;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -18,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
@@ -29,8 +19,6 @@ import ua.stellar.seatingchart.domain.Layout;
 import ua.stellar.seatingchart.domain.LayoutComposition;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.event.NotifyEvent;
-import ua.stellar.seatingchart.event.OnResourceChangeListener;
-import ua.stellar.seatingchart.service.MapService;
 import ua.stellar.seatingchart.task.LoadLayoutCompositionTask;
 import ua.stellar.seatingchart.task.LoadPictureTask;
 import ua.stellar.ua.test.seatingchart.R;
@@ -70,8 +58,6 @@ public class MapFragment extends Fragment {
     private OnClickListener onClickListener;
     private OnDoubleClickListener onDoubleClickListener;
     private ResourceItem.OnLongClickListener onResourceLongClick;
-
-    public MapService mapService;
 
     public MapFragment() {
     }

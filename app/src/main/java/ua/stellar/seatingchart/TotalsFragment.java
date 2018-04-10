@@ -1,6 +1,7 @@
 package ua.stellar.seatingchart;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.widget.SearchView;
@@ -25,7 +26,6 @@ import ua.stellar.seatingchart.domain.Layout;
 import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.domain.Total;
-import ua.stellar.seatingchart.service.MapService;
 import ua.stellar.seatingchart.task.LoadDataTask;
 import ua.stellar.seatingchart.utils.JsonResponse;
 import ua.stellar.seatingchart.utils.OperationAdapter;
@@ -45,13 +45,14 @@ public class TotalsFragment extends Fragment {
     private ListView totalList;
     private TotalAdapter totalAdapter;
     private TextView twAllCount;
+    private TextView twMapTitle;
     private ProgressBar pbOperationLoad;
     private ListView lwOperation;
     private SearchView swOperation;
 
     private OperationAdapter adapter;
 
-    public MapService mapService;
+    private OnTotalsListener totalsListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -66,21 +67,30 @@ public class TotalsFragment extends Fragment {
         activity = this.getActivity();
         totalList = (ListView) view.findViewById(R.id.lwTotal);
         twAllCount = (TextView) view.findViewById(R.id.twAllCount);
+        twMapTitle = (TextView) view.findViewById(R.id.twMapTitle);
         pbOperationLoad = (ProgressBar) view.findViewById(R.id.pbOperationLoad);
         pbOperationLoad.setVisibility(View.VISIBLE);
 
         Button buUpdate = (Button) view.findViewById(R.id.buUpdate);
         buUpdate.setOnClickListener((View v) -> {
             Log.d(LOG_TAG, "Update data");
-            mapService.loadChanges();
+            totalsListener.loadChanges();
         });
 
-        //создать вью и загрузить все операции
-        mapService.loadAllOperation();
-
+        totalsListener.onTotalsCreate(this);
         return view;
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        try {
+            totalsListener = (OnTotalsListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnTotalsListener");
+        }
+    }
     //обновить итоги
     public void updateTotals(List<Layout> layouts) {
         //загрузка итогов по видам ресурсов
@@ -100,9 +110,13 @@ public class TotalsFragment extends Fragment {
         swOperation.clearFocus();
     }
 
+    public void showCurrentMap(final String title) {
+        twMapTitle.setText(title);
+    }
+
     private void loadTotals() {
         //загрузка итогов
-        String url = SysInfo.getInstance().getUrlAddress() + "/order/get-totals?layout_id=" + mapService.getLayoutIdList();
+        String url = SysInfo.getInstance().getUrlAddress() + "/order/get-totals?layout_id=" + SysInfo.getInstance().getLayoutIdList();
         LoadDataTask totalLoadTask = new LoadDataTask(this.getActivity(), false, url);
         totalLoadTask.setOnTaskComplete((JsonResponse response) -> {
             Log.d(LOG_TAG, "Загружены итоги: " + response.isSuccess());
@@ -113,7 +127,7 @@ public class TotalsFragment extends Fragment {
 
     private void showTotals(JsonResponse response) {
         if (response.isSuccess()) {
-            List<Total> list = null;
+            List<Total> list;
             Gson gson = new Gson();
             Type listType = new TypeToken<ArrayList<Total>>(){}.getType();
             String innerJson = gson.toJson(response.getResult());
@@ -141,7 +155,7 @@ public class TotalsFragment extends Fragment {
     private void updateAllCount() {
         Integer all = 0;
         for (Total totalNew : totalAdapter.getItems()) {
-            all+= totalNew.getAmount();
+            all += totalNew.getAmount();
         }
         twAllCount.setText("" + all);
     }
@@ -149,7 +163,7 @@ public class TotalsFragment extends Fragment {
     public void initOperationList(List<Operation> operations) {
         //обновить ID последней загруженной операции с сервера
         for (Operation operation : operations) {
-            mapService.setLastOperation(operation);
+            totalsListener.setLastOperation(operation);
         }
 
         adapter = new OperationAdapter(this.getContext(), operations);
@@ -173,6 +187,7 @@ public class TotalsFragment extends Fragment {
         //swOperation.onaddTextChangedListener(new TextWatcher() {
 
         swOperation.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
             @Override
             public boolean onQueryTextSubmit(String query) {
                 //lwOperation.setText(query);
@@ -183,9 +198,14 @@ public class TotalsFragment extends Fragment {
             @Override
             public boolean onQueryTextChange(String newText) {
                 adapter.filter(newText);
-
                 return true;
             }
         });
+    }
+
+    public interface OnTotalsListener {
+        void onTotalsCreate(final TotalsFragment fragment);
+        void setLastOperation(Operation operation);
+        void loadChanges();
     }
 }

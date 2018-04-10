@@ -22,6 +22,8 @@ public class SysInfo {
     //список типов операций(состояния)
     private List<OperationType> operationTypes = null;
 
+    private String layoutIdList = "";
+
     private SysInfo() {
         host = "";
         port = 0;
@@ -89,6 +91,26 @@ public class SysInfo {
             }
         }
         return null;
+    }
+
+    public String getLayoutIdList() {
+        return layoutIdList;
+    }
+
+    public void setLayoutIdList(final List<Layout> layouts) {
+        String id = "";
+        if (layouts == null) {
+            layoutIdList = id;
+            return;
+        }
+        for (Layout layout : layouts) {
+            if (id != "") {
+                id += ",";
+            }
+            id += layout.getId().toString();
+        }
+
+        layoutIdList = id;
     }
 
 

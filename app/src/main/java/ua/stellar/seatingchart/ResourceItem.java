@@ -5,7 +5,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
@@ -164,6 +166,9 @@ public class ResourceItem {
         paint.setStyle(Paint.Style.STROKE);
         paint.setColor(Color.parseColor("#3d3d3d"));
         paint.setStrokeWidth(0.3f);
+        paint.setPathEffect(new DashPathEffect(new float[] { 10, 5}, 0));
+
+        Path path = new Path();
 
         int x = 0;
         int y = 0;
@@ -173,7 +178,8 @@ public class ResourceItem {
             x+= step;
             y+= step;
 
-            canvas.drawLine(x, 0, 0, y, paint);
+            path.moveTo(x, 0);
+            path.lineTo(0, y);
         }
 
         x = 0;
@@ -183,8 +189,10 @@ public class ResourceItem {
             x+= step;
             y-= step;
 
-            canvas.drawLine(0, y, x, height, paint);
+            path.moveTo(0, y);
+            path.lineTo(x, height);
         }
+        canvas.drawPath(path, paint);
 
         image.setImageBitmap(bitmap);
 
