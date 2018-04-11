@@ -3,6 +3,7 @@ package ua.stellar.seatingchart;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -61,6 +62,12 @@ public class LoginUserDialog extends DialogFragment implements View.OnClickListe
         if (!isEmptyLogin()) {
             edPassword.requestFocus();
         }
+
+        Button buSettings = (Button) view.findViewById(R.id.buSettings);
+        buSettings.setOnClickListener((View v)-> {
+            Intent settingsActivity = new Intent(activity.getBaseContext(), SettingsActivity.class);
+            startActivity(settingsActivity);
+        });
 
         return view;
     }
