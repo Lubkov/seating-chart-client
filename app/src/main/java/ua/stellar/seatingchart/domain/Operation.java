@@ -13,6 +13,7 @@ public class Operation {
 	private Long goodsId;
 	private Integer goodsNumber;
 	private String goodsTypeName;
+	private Integer layoutNumber;
 
 	public Operation() {
 		
@@ -26,7 +27,8 @@ public class Operation {
 					 final Long operationType,
 					 final Long goodsId,
 					 final Integer goodsNumber,
-					 final String goodsName) {
+					 final String goodsName,
+					 final Integer layoutNumber) {
 		this.id = id;
 		this.createDate = createDate;
 		this.fromDate = fromDate;
@@ -36,6 +38,7 @@ public class Operation {
 		this.goodsId = goodsId;
 		this.goodsNumber = goodsNumber;
 		this.goodsTypeName = goodsName;
+		this.layoutNumber = layoutNumber;
 	}
 
 	public Operation(final Operation source) {
@@ -48,6 +51,7 @@ public class Operation {
 		this.goodsId = source.goodsId;
 		this.goodsNumber = source.goodsNumber;
 		this.goodsTypeName = source.goodsTypeName;
+		this.layoutNumber = source.layoutNumber;
 	}
 
 	public Long getId() {
@@ -120,5 +124,13 @@ public class Operation {
 
 	public void setGoodsTypeName(String goodsTypeName) {
 		this.goodsTypeName = goodsTypeName;
+	}
+
+	public Integer getLayoutNumber() {
+		return layoutNumber;
+	}
+
+	public void setLayoutNumber(Integer layoutNumber) {
+		this.layoutNumber = layoutNumber;
 	}
 }

@@ -69,7 +69,7 @@ public class OperationAdapter extends BaseAdapter implements Filterable {
         TextView twUserName = (TextView) view.findViewById(R.id.twUserName);
 
         twDate.setText(DateUtils.utilDateToShortTimeStr(operation.getCreateDate()));
-        twName.setText(operation.getGoodsNumber() + " " + operation.getGoodsTypeName());
+        twName.setText(operation.getLayoutNumber() + " - " + operation.getGoodsNumber());
         twUserName.setText(operation.getUserName());
         twDate.setBackgroundColor(color);
 
