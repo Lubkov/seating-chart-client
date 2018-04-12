@@ -15,6 +15,7 @@ public class SysInfo {
     private Integer portUpdate;
     private TheUser user;
     private String deviceId;
+    private String version = "1.0.1";
 
     //список вилов товара
     private List<GoodsType> goodsTypes = null;
@@ -178,6 +179,8 @@ public class SysInfo {
         this.operationTypes = operationTypes;
     }
 
-
+    public String getVersion() {
+        return version;
+    }
 }
 

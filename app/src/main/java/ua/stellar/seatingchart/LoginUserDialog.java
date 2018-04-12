@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 
+import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.domain.TheUser;
 import ua.stellar.seatingchart.event.NotifyEvent;
 import ua.stellar.seatingchart.event.OnLoginListener;
@@ -55,6 +56,9 @@ public class LoginUserDialog extends DialogFragment implements View.OnClickListe
 
         buLogin = (Button) view.findViewById(R.id.buLogin);
         buLogin.setOnClickListener(this);
+
+        TextView twVersion = (TextView) view.findViewById(R.id.twVersion);
+        twVersion.setText("Версия клиента: " + SysInfo.getInstance().getVersion());
 
         //востановить имя пользователя
         restoreLogin();
