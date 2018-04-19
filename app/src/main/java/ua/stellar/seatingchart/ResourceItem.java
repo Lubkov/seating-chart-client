@@ -216,16 +216,21 @@ public class ResourceItem {
     }
 
     public void update() {
-        Long id = layoutComposition.getLastOper().getOperationType();
-        //Log.d(LOG_TAG, "Item status id #" + id);
+        Long id = layoutComposition.getLastOperation().getOperationType();
+        Log.d(LOG_TAG, "Item status id #" + id);
         OperationType status = SysInfo.getInstance().getOperationType(id);
+        if (status == null) {
+            Log.e(LOG_TAG, "status is null. Item status id #" + id);
+            return;
+        }
+
         //Log.d(LOG_TAG, "Item status name: " + status.getName());
         updateStyle(Background.getRGBColor(status.getColor()),
-                    status.getBorderSize(),
-                    Background.getRGBColor(status.getBorderColor()));
+                status.getBorderSize(),
+                Background.getRGBColor(status.getBorderColor()));
 
-        if ((layoutComposition.getLastOper().getId() != null) &&
-                (layoutComposition.getLastOper().getId() > 0)) {
+        if ((layoutComposition.getLastOperation() != null) &&
+                (layoutComposition.getLastOperation().getId() > 0)) {
             image.setVisibility(View.INVISIBLE);
         } else {
             image.setVisibility(View.VISIBLE);
@@ -236,6 +241,7 @@ public class ResourceItem {
 
         SaveResourceTask task = new SaveResourceTask(
                 activity,
+                layoutComposition.getId(),
                 layoutComposition.getLayoutID(),
                 layoutComposition.getGoodID(),
                 operationType);
@@ -246,7 +252,7 @@ public class ResourceItem {
                 Log.d(LOG_TAG, "Сохранение операции...");
                 if (operation != null) {
                     Log.d(LOG_TAG, "Сохранение операции: " + operation.getOperationType());
-                    layoutComposition.setLastOper(operation);
+                    layoutComposition.setLastOperation(operation);
                     update();
                     doStatusChanged();
                 }

@@ -148,10 +148,10 @@ public class ResourceEditDialog extends DialogFragment implements OnClickListene
         if (v.equals(buttonYes)) {
             Integer radioButtonID = edState.getCheckedRadioButtonId();
             OperationType operType = SysInfo.getInstance().getOperationType((long) radioButtonID);
-            Long lastOperID = resourceItem.getLayoutComposition().getLastOper().getOperationType();
+            Long lastOperType = resourceItem.getLayoutComposition().getLastOperation().getOperationType();
 
             //Состояние изменилось, необходимо сохранить
-            if (!lastOperID.equals(radioButtonID.longValue())) {
+            if (!lastOperType.equals(radioButtonID.longValue())) {
                 resourceItem.saveState(operType);
                 result = true;
             } else {
@@ -202,7 +202,7 @@ public class ResourceEditDialog extends DialogFragment implements OnClickListene
         //обновить возможность редактирования ресурса и блокировать для других устройств
         updateReadOnly();
 
-        Long status = resourceItem.getLayoutComposition().getLastOper().getOperationType();
+        Long status = resourceItem.getLayoutComposition().getLastOperation().getOperationType();
         edState.check(status.intValue());
 
         //обновить статус

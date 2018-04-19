@@ -33,9 +33,9 @@ public class LoadPictureTask extends AsyncTask<Void, Void, Bitmap> {
             connection.setDoInput(true);
             connection.connect();
             InputStream input = connection.getInputStream();
-            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            Bitmap bitmap = BitmapFactory.decodeStream(input);
 
-            return myBitmap;
+            return bitmap;
         } catch (Exception e) {
             return null;
         }

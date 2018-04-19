@@ -281,24 +281,24 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
 
                         //нашли ресурс на карте
                         if (resourceItem != null) {
-                            Log.d(LOG_TAG, "Old resource state: " + resourceItem.getLayoutComposition().getLastOper().getOperationType());
-                            Log.d(LOG_TAG, "New resource state: " + item.getLastOper().getOperationType());
+//                            Log.d(LOG_TAG, "Old resource state: " + resourceItem.getLayoutComposition().getLastOperation().getOperationType());
+//                            Log.d(LOG_TAG, "New resource state: " + item.getLastOperation().getOperationType());
 
                             //заменяем последнюю операцию
-                            resourceItem.getLayoutComposition().setLastOper(item.getLastOper());
+                            resourceItem.getLayoutComposition().setLastOperation(item.getLastOperation());
 
                             //обновляем визуальное состояние
                             resourceItem.update();
 
-                            if ((item.getLastOper().getId() != null) && (item.getLastOper().getId() > 0)) {
-                                operations.add(new Operation(item.getLastOper()));
+                            if ((item.getLastOperation() != null) && (item.getLastOperation().getId() > 0)) {
+                                operations.add(new Operation(item.getLastOperation()));
                             }
                         } else {
                             Log.e(LOG_TAG, "Ресурс не найден на карте");
                         }
 
                         //обновить ID последней загруженной операции с сервера
-                        setLastOperation(item.getLastOper());
+                        setLastOperation(item.getLastOperation());
                     }
 
                     addOperations(operations);

@@ -21,6 +21,7 @@ public class SaveResourceTask extends AsyncTask<Void, Void, Operation> {
     private Activity activity;
     private ProgressDialog pDialog;
 
+    private Long itemId;
     private Long layoutId;
     private Long goodsId;
     private OperationType operationType;
@@ -28,10 +29,13 @@ public class SaveResourceTask extends AsyncTask<Void, Void, Operation> {
     private NotifyEvent onSaveComplete;
 
     public SaveResourceTask(final Activity activity,
+                            final Long itemId,
                             final Long layoutId,
                             final Long goodsId,
                             final OperationType operationType) {
+
         this.activity = activity;
+        this.itemId = itemId;
         this.layoutId = layoutId;
         this.goodsId = goodsId;
         this.operationType = operationType;
@@ -52,6 +56,7 @@ public class SaveResourceTask extends AsyncTask<Void, Void, Operation> {
         try {
             String urlString = SysInfo.getInstance().getUrlAddress() +
                     "/order/add-operation?" +
+                    "item_id=" + itemId + "&" +
                     "layout_id=" + layoutId + "&" +
                     "goods_id=" + goodsId + "&" +
                     "user_id=" + SysInfo.getInstance().getUser().getId() + "&" +

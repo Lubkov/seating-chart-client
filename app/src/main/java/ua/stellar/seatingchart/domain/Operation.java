@@ -4,10 +4,10 @@ import java.util.Date;
 
 public class Operation {
 
-	private Long id;	
+	private Long id;
 	private Date createDate;
 	private Date fromDate;
-	private Date toDate;	
+	private Date toDate;
 	private String userName;
 	private Long operationType;
 	private Long goodsId;

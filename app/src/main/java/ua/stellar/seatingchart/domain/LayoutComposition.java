@@ -1,7 +1,7 @@
 package ua.stellar.seatingchart.domain;
 
 public class LayoutComposition {
-	
+
 	private Long id;
 	private Long layoutID;
 	private Long goodID;
@@ -9,11 +9,11 @@ public class LayoutComposition {
 	private String goodsTypeName;
 	private String goodName;
 	private Integer goodNumber;
-	private Operation lastOper;
+	private Operation lastOperation;
 	private Integer positionX;
 	private Integer positionY;
-	private Integer height;	
-	private Integer width;	
+	private Integer height;
+	private Integer width;
 	private Integer backgroundAngle;
 	private Integer titleAlign;
 	private Integer titleAlignment;
@@ -21,7 +21,7 @@ public class LayoutComposition {
 	public LayoutComposition() {
 		
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -54,6 +54,14 @@ public class LayoutComposition {
 		this.goodsTypeID = goodsTypeID;
 	}
 
+	public String getGoodsTypeName() {
+		return goodsTypeName;
+	}
+
+	public void setGoodsTypeName(String goodsTypeName) {
+		this.goodsTypeName = goodsTypeName;
+	}
+
 	public String getGoodName() {
 		return goodName;
 	}
@@ -70,12 +78,12 @@ public class LayoutComposition {
 		this.goodNumber = goodNumber;
 	}
 
-	public Operation getLastOper() {
-		return lastOper;
+	public Operation getLastOperation() {
+		return lastOperation;
 	}
 
-	public void setLastOper(Operation lastOper) {
-		this.lastOper = lastOper;
+	public void setLastOperation(Operation lastOperation) {
+		this.lastOperation = lastOperation;
 	}
 
 	public Integer getPositionX() {
@@ -132,13 +140,5 @@ public class LayoutComposition {
 
 	public void setTitleAlignment(Integer titleAlignment) {
 		this.titleAlignment = titleAlignment;
-	}
-
-	public String getGoodsTypeName() {
-		return goodsTypeName;
-	}
-
-	public void setGoodsTypeName(String goodsTypeName) {
-		this.goodsTypeName = goodsTypeName;
 	}
 }

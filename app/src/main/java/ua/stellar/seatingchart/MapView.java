@@ -47,6 +47,8 @@ public class MapView extends View {
 
     public void setBackground(Bitmap background) {
         this.background = background;
+
+        invalidate();
     }
 
     private GestureDetector.OnGestureListener gestureListener = new GestureDetector.SimpleOnGestureListener() {
