@@ -45,11 +45,11 @@ public class MapFragment extends Fragment {
     //контейнер
     private RelativeLayout container = null;
 
-    //высота карты(контейнера)
-    private int mapHeight;
-
-    //высота карты(контейнера)
-    private int mapWidth;
+//    //высота карты(контейнера)
+//    private int mapHeight;
+//
+//    //высота карты(контейнера)
+//    private int mapWidth;
 
     private ProgressBar loadProgressBar;
     private ResourceEditDialog editDialog = null;
@@ -87,28 +87,31 @@ public class MapFragment extends Fragment {
             Log.e(LOG_TAG, "Данные о карте не получены");
         }
 
-        ViewTreeObserver observer = view.getViewTreeObserver();
+        //загрузить изображение карты
+        loadBackground();
 
-        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-
-            @Override
-            public void onGlobalLayout() {
-                view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
-                //получение размеров карты
-                mapHeight = view.getHeight();
-                mapWidth = view.getWidth();
-
-                //получены данные о карте
-                if (layout != null) {
-                    //формирование карты - размеры, фоновое изображение
-                    loadBackground();
-                } else {
-                    Log.e(LOG_TAG, "Данные карты не закгружены, layout = null");
-                    //собообщить пользователю о ошибке
-                }
-            }
-        });
+//        ViewTreeObserver observer = view.getViewTreeObserver();
+//
+//        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+//
+//            @Override
+//            public void onGlobalLayout() {
+//                view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+//
+//                //получение размеров карты
+//                mapHeight = view.getHeight();
+//                mapWidth = view.getWidth();
+//
+//                //получены данные о карте
+//                if (layout != null) {
+//                    //формирование карты - размеры, фоновое изображение
+//                    loadBackground();
+//                } else {
+//                    Log.e(LOG_TAG, "Данные карты не закгружены, layout = null");
+//                    //собообщить пользователю о ошибке
+//                }
+//            }
+//        });
 
         return view;
     }
@@ -137,7 +140,6 @@ public class MapFragment extends Fragment {
     }
 
     private void loadBackground() {
-        Log.d(LOG_TAG, "updateView. Map size, width: " + mapWidth + ", height = " + mapHeight);
 
         String backgroundUrl = SysInfo.getInstance().getUrlAddress() + "/resources/images/" + layout.getBackground().getNumber() + ".png";
         Log.d(LOG_TAG, "backgroundUrl: " + backgroundUrl);
@@ -146,11 +148,11 @@ public class MapFragment extends Fragment {
         task.setOnLoadComplete(new NotifyEvent<Bitmap>() {
             @Override
             public void onAction(Bitmap sender) {
+                Log.d(LOG_TAG, "Изображение карты загружено: " + (sender != null));
+
                 if (sender != null) {
-                    //вставить изображение не маштабируя
-//                    resizeBackground(sender);
+                    mapView.setBackground(sender);
                 }
-                mapView.setBackground(sender);
 
                 //загрузить данные карты
                 loadMapData();
