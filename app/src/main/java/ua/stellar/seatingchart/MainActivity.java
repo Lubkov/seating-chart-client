@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -20,13 +21,16 @@ import java.util.List;
 
 import ua.stellar.seatingchart.domain.Layout;
 import ua.stellar.seatingchart.domain.LayoutComposition;
+import ua.stellar.seatingchart.domain.LockedGoods;
 import ua.stellar.seatingchart.domain.Operation;
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.domain.TheUser;
 import ua.stellar.seatingchart.event.NotifyEvent;
 import ua.stellar.seatingchart.event.OnDataUpdateListener;
 import ua.stellar.seatingchart.event.OnLoginListener;
+import ua.stellar.seatingchart.event.OnTaskCompleteListener;
 import ua.stellar.seatingchart.task.BackgroundUpdateTask;
+import ua.stellar.seatingchart.task.LoadDataTask;
 import ua.stellar.seatingchart.task.LoadLayoutsTask;
 import ua.stellar.seatingchart.task.OperationLoadTask;
 import ua.stellar.seatingchart.tcp.TCPClient;
@@ -116,6 +120,9 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
         totals = new TotalsFragment();
         FragmentTransaction fragmentTrans = getSupportFragmentManager().beginTransaction();
         fragmentTrans.replace(R.id.paTotals, totals).commit();
+
+        //показать текущую карту, и добавить показ названия карты при изменении
+        showCurrentMap();
 
         //загрузка итогов
         loadTotals();
@@ -222,16 +229,21 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
         }
     }
 
-    @Override
-    public void onTotalsCreate(final TotalsFragment fragment) {
+    private void showCurrentMap() {
+        TextView edit = (TextView) findViewById(R.id.twCurrentMapTitle);
         //изменилась активная карта
-        mapPageAdapter.setOnChangeListener((final int position, final String title) -> totals.showCurrentMap(title));
+        mapPageAdapter.setOnChangeListener((final int position, final String title) -> {
+            edit.setText(title);
+        });
 
         //показать название первой карты
         if (layouts.size() > 0) {
-            totals.showCurrentMap(layouts.get(0).getName());
+            edit.setText(layouts.get(0).getName());
         }
+    }
 
+    @Override
+    public void onTotalsCreate(final TotalsFragment fragment) {
         //создать вью и загрузить все операции
         loadAllOperation();
     }
@@ -250,6 +262,11 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
                         list = gson.fromJson(innerJson, listType);
                         Log.d(LOG_TAG, "Загружено " + list.size() + " операций");
                         initOperationList(list);
+
+                        //нет операций, необходимо получить id последней операции, чтобы не обновлять состояние всех ресурсов
+                        if (list.size() == 0) {
+                            loadLastOperation();
+                        }
                     } catch(Exception e) {
                         showError("Загрузка операций: " + e.getMessage());
                     }
@@ -323,6 +340,7 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
     @Override
     public void setLastOperation(final Operation operation) {
         if (operation.getId() > lastUpdateID) {
+            Log.d(LOG_TAG, "Set last operation: old = " + lastUpdateID + ", new = " + operation.getId());
             lastUpdateID = operation.getId();
         }
     }
@@ -336,6 +354,23 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
             }
         }
         return null;
+    }
+
+    private void loadLastOperation() {
+        String url = SysInfo.getInstance().getUrlAddress() + "/order/get-last-operation-id";
+        LoadDataTask totalLoadTask = new LoadDataTask(this, false, url);
+        totalLoadTask.setOnTaskComplete((JsonResponse response) -> {
+            if (response.isSuccess()) {
+                Gson gson = new Gson();
+                String responseData = gson.toJson(response.getResult());
+
+                Operation operation = gson.fromJson(responseData, Operation.class);
+                if (operation != null) {
+                    setLastOperation(operation);
+                }
+            }
+        });
+        totalLoadTask.execute();
     }
 
     private long getCount() {

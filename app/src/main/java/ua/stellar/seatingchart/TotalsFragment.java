@@ -45,7 +45,6 @@ public class TotalsFragment extends Fragment {
     private ListView totalList;
     private TotalAdapter totalAdapter;
     private TextView twAllCount;
-    private TextView twMapTitle;
     private ProgressBar pbOperationLoad;
     private ListView lwOperation;
     private SearchView swOperation;
@@ -67,7 +66,6 @@ public class TotalsFragment extends Fragment {
         activity = this.getActivity();
         totalList = (ListView) view.findViewById(R.id.lwTotal);
         twAllCount = (TextView) view.findViewById(R.id.twAllCount);
-        twMapTitle = (TextView) view.findViewById(R.id.twMapTitle);
         pbOperationLoad = (ProgressBar) view.findViewById(R.id.pbOperationLoad);
         pbOperationLoad.setVisibility(View.VISIBLE);
 
@@ -108,10 +106,6 @@ public class TotalsFragment extends Fragment {
         swOperation.setQuery(text, false);
         swOperation.setIconified(false);
         swOperation.clearFocus();
-    }
-
-    public void showCurrentMap(final String title) {
-        twMapTitle.setText(title);
     }
 
     private void loadTotals() {
@@ -205,7 +199,7 @@ public class TotalsFragment extends Fragment {
 
     public interface OnTotalsListener {
         void onTotalsCreate(final TotalsFragment fragment);
-        void setLastOperation(Operation operation);
+        void setLastOperation(final Operation operation);
         void loadChanges();
     }
 }
