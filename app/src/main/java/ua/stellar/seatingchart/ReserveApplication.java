@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.ImageView;
 
 import ua.stellar.seatingchart.domain.SysInfo;
 import ua.stellar.seatingchart.event.NotifyEvent;
@@ -44,7 +45,10 @@ public class ReserveApplication extends Application {
 
     //инициализация подключения к серверу обновления данных
     public void startTCPClient() {
+
         if (tcpClient == null) {
+            Log.d(LOG_TAG, "Create TCP client");
+
             tcpClient = new TCPClient(SysInfo.getInstance().getHost(),
                     SysInfo.getInstance().getPortUpdate());
 

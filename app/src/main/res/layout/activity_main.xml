@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/tabhost"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/paTotals"
+    <RelativeLayout
+        android:id="@+id/paTotalsContainer"
         android:layout_width="180dp"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="#77b7b4b4"
         android:layout_alignParentRight="true">
 
@@ -26,14 +26,68 @@
             android:text=""
             android:textAlignment="center"
             android:textColor="@color/colorPrimaryDark"
-            android:textSize="18sp" />
-    </LinearLayout>
+            android:textSize="18sp"
+            android:layout_alignParentTop="true" />
+
+        <LinearLayout
+            android:id="@+id/paTotals"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_below="@+id/twCurrentMapTitle"
+            android:layout_above="@+id/buttonsLayout" />
+
+        <!--Нижняя панель управления-->
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonsLayout"
+            android:layout_alignParentBottom="true">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/mapTitleLayout">
+
+                <ProgressBar
+                    android:id="@+id/pbBackgroundUpdate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left"
+                    android:visibility="invisible" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Обновить"
+                    android:id="@+id/buUpdate"
+                    android:layout_marginBottom="12dp"
+                    android:layout_gravity="right|top" />
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent" >
+
+                    <ImageView
+                        android:id="@+id/imageStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/bullet_blue"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentBottom="true"/>
+                </RelativeLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/paTotals" >
+        android:layout_toLeftOf="@+id/paTotalsContainer" >
 
         <android.support.v4.view.ViewPager
             android:id="@+id/mapContainer"

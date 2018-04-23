@@ -69,12 +69,6 @@ public class TotalsFragment extends Fragment {
         pbOperationLoad = (ProgressBar) view.findViewById(R.id.pbOperationLoad);
         pbOperationLoad.setVisibility(View.VISIBLE);
 
-        Button buUpdate = (Button) view.findViewById(R.id.buUpdate);
-        buUpdate.setOnClickListener((View v) -> {
-            Log.d(LOG_TAG, "Update data");
-            totalsListener.loadChanges();
-        });
-
         totalsListener.onTotalsCreate(this);
         return view;
     }
@@ -200,6 +194,5 @@ public class TotalsFragment extends Fragment {
     public interface OnTotalsListener {
         void onTotalsCreate(final TotalsFragment fragment);
         void setLastOperation(final Operation operation);
-        void loadChanges();
     }
 }

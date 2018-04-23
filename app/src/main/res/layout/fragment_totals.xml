@@ -94,37 +94,4 @@
 
     </RelativeLayout>
 
-    <!--Нижняя панель управления-->
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonsLayout"
-        android:layout_alignParentBottom="true">
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/mapTitleLayout">
-
-            <ProgressBar
-                android:id="@+id/pbBackgroundUpdate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left"
-                android:visibility="invisible" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Обновить"
-                android:id="@+id/buUpdate"
-                android:layout_marginBottom="12dp"
-                android:layout_gravity="right|top" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
 </RelativeLayout>

@@ -8,6 +8,9 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,12 +31,12 @@ import ua.stellar.seatingchart.domain.TheUser;
 import ua.stellar.seatingchart.event.NotifyEvent;
 import ua.stellar.seatingchart.event.OnDataUpdateListener;
 import ua.stellar.seatingchart.event.OnLoginListener;
-import ua.stellar.seatingchart.event.OnTaskCompleteListener;
 import ua.stellar.seatingchart.task.BackgroundUpdateTask;
 import ua.stellar.seatingchart.task.LoadDataTask;
 import ua.stellar.seatingchart.task.LoadLayoutsTask;
 import ua.stellar.seatingchart.task.OperationLoadTask;
 import ua.stellar.seatingchart.tcp.TCPClient;
+import ua.stellar.seatingchart.tcp.TCPStatus;
 import ua.stellar.seatingchart.utils.JsonResponse;
 import ua.stellar.seatingchart.utils.MapPageAdapter;
 import ua.stellar.ua.test.seatingchart.R;
@@ -68,6 +71,12 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
         container = (RelativeLayout) findViewById(android.R.id.tabhost);
         mapContainer = (ViewPager) findViewById(R.id.mapContainer);
         mapContainer.setOffscreenPageLimit(10);
+
+        Button buUpdate = (Button) findViewById(R.id.buUpdate);
+        buUpdate.setOnClickListener((View v) -> {
+            Log.d(LOG_TAG, "Update data");
+            loadChanges();
+        });
 
         if (SysInfo.getInstance().isEmpty()) {
             showSettings();
@@ -226,7 +235,24 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
                 }
             };
             client.setOnDataUpdateListener(onDataUpdate);
+            client.setOnConnectListener((TCPStatus status) -> showTCPStatus(status));
+            showTCPStatus(client.getStatus());
         }
+    }
+
+    private void showTCPStatus(final TCPStatus status) {
+        ImageView image = (ImageView) findViewById(R.id.imageStatus);
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (TCPStatus.Connect.equals(status)) {
+                    image.setImageResource(R.drawable.bullet_green);
+                } else {
+                    image.setImageResource(R.drawable.bullet_red);
+                }
+            }
+        });
     }
 
     private void showCurrentMap() {
@@ -278,13 +304,12 @@ public class MainActivity extends FragmentActivity implements OnLoginListener, T
         task.execute();
     }
 
-    @Override
     public void loadChanges() {
         Log.d(LOG_TAG, "Обновление данных");
         String url = getLoadLayoutCompositionsUrl(SysInfo.getInstance().getLayoutIdList(), lastUpdateID); //layout.getId()
 
         //загрузить обновление данных
-        BackgroundUpdateTask task = new BackgroundUpdateTask(url);
+        BackgroundUpdateTask task = new BackgroundUpdateTask(this, url);
 
         task.setOnLoadingComplete(new NotifyEvent<List<LayoutComposition>>() {
             public void onAction(List<LayoutComposition> items) {

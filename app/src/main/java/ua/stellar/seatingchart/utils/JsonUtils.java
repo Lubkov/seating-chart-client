@@ -7,6 +7,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import java.net.URI;
@@ -98,8 +101,11 @@ public class JsonUtils {
 	public static JsonResponse getJsonResponse(String url) throws Exception {
 		JsonResponse res = null;
 
+		final HttpParams httpParams = new BasicHttpParams();
+		HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+
 		Gson gson = new Gson();
-		HttpClient client = new DefaultHttpClient();
+		HttpClient client = new DefaultHttpClient(httpParams);
 		HttpGet request = new HttpGet();
 
 		URI objUrl = new URI(url);

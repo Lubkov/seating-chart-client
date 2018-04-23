@@ -15,7 +15,7 @@ public class SysInfo {
     private Integer portUpdate;
     private TheUser user;
     private String deviceId;
-    private String version = "1.0.1";
+    private String version = "1.0.3";
 
     //список вилов товара
     private List<GoodsType> goodsTypes = null;
